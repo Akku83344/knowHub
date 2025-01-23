@@ -9,6 +9,7 @@ import { useGetCoursesQuery } from '@/state/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import CourseCardSearch from '@/components/CourseCardSearch';
 import { useRouter } from "next/navigation";
+import { useUser } from '@clerk/nextjs';
 
 const LoadingSkeleton = () => {
   return (
@@ -44,11 +45,12 @@ const LoadingSkeleton = () => {
 };
 
 const Landing = () => {
+  // const {user} = useUser();
+  // console.log("user:",user); 
   const router = useRouter();
   const currentImage = useCarousel({totalImages: 3});
   const { data: courses, isLoading, isError } = useGetCoursesQuery({});
   if (isLoading) return <LoadingSkeleton />;
-    console.log("Courses:", courses);
     const handleCourseClick = (courseId: string) => {
       router.push(`/search?id=${courseId}`, {
         scroll: false,

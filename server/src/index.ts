@@ -8,7 +8,7 @@ import * as dynamoose from "dynamoose";
 
 import courseRoutes from "./routes/courseRoutes"
 import userClerkRoutes from "./routes/userClerkRoutes"
-import { createClerkClient } from "@clerk/express";
+import { clerkMiddleware, createClerkClient, requireAuth } from "@clerk/express";
 dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -26,14 +26,14 @@ app.use(helmet());
 app.use(helmet.crossOriginResourcePolicy({policy: "cross-origin"}));
 app.use(morgan("common"));
 app.use(cors());
-
+app.use(clerkMiddleware());
 
 /* ROUTES */
 app.get("/", (req, res) => {
     res.send("Hello World");
   });
 app.use("/courses",courseRoutes);
-app.use("/users/clerk",userClerkRoutes);
+app.use("/users/clerk",requireAuth(),userClerkRoutes);
 const port = process.env.PORT || 3000;
   if (!isProduction) {
     app.listen(port, () => {

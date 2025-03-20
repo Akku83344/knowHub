@@ -8,6 +8,8 @@ import * as dynamoose from "dynamoose";
 
 import courseRoutes from "./routes/courseRoutes"
 import userClerkRoutes from "./routes/userClerkRoutes"
+import transactionRoutes from "./routes/transactionRoutes"
+import userCourseProgressRoutes from "./routes/userCourseProgressRoutes"
 import { clerkMiddleware, createClerkClient, requireAuth } from "@clerk/express";
 dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
@@ -29,11 +31,13 @@ app.use(cors());
 app.use(clerkMiddleware());
 
 /* ROUTES */
-app.get("/", (req, res) => {
-    res.send("Hello World");
-  });
+// app.get("/", (req, res) => {
+//     res.send("Hello World");
+//   });
 app.use("/courses",courseRoutes);
 app.use("/users/clerk",requireAuth(),userClerkRoutes);
+app.use("/transactions",requireAuth(),transactionRoutes);
+app.use("/users/course-progress",requireAuth(),userCourseProgressRoutes);
 const port = process.env.PORT || 3000;
   if (!isProduction) {
     app.listen(port, () => {

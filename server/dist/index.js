@@ -45,6 +45,8 @@ const morgan_1 = __importDefault(require("morgan"));
 const dynamoose = __importStar(require("dynamoose"));
 const courseRoutes_1 = __importDefault(require("./routes/courseRoutes"));
 const userClerkRoutes_1 = __importDefault(require("./routes/userClerkRoutes"));
+const transactionRoutes_1 = __importDefault(require("./routes/transactionRoutes"));
+const userCourseProgressRoutes_1 = __importDefault(require("./routes/userCourseProgressRoutes"));
 const express_2 = require("@clerk/express");
 dotenv_1.default.config();
 const isProduction = process.env.NODE_ENV === "production";
@@ -62,11 +64,13 @@ app.use((0, morgan_1.default)("common"));
 app.use((0, cors_1.default)());
 app.use((0, express_2.clerkMiddleware)());
 /* ROUTES */
-app.get("/", (req, res) => {
-    res.send("Hello World");
-});
+// app.get("/", (req, res) => {
+//     res.send("Hello World");
+//   });
 app.use("/courses", courseRoutes_1.default);
 app.use("/users/clerk", (0, express_2.requireAuth)(), userClerkRoutes_1.default);
+app.use("/transactions", (0, express_2.requireAuth)(), transactionRoutes_1.default);
+app.use("/users/course-progress", (0, express_2.requireAuth)(), userCourseProgressRoutes_1.default);
 const port = process.env.PORT || 3000;
 if (!isProduction) {
     app.listen(port, () => {

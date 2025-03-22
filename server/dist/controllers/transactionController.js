@@ -40,19 +40,27 @@ const listTransactions = (req, res) => __awaiter(void 0, void 0, void 0, functio
 });
 exports.listTransactions = listTransactions;
 const createStripePaymentIntent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let { amount } = req.body;
+    let { amount, description, billingDetails } = req.body;
     if (!amount || amount <= 0) {
         amount = 50;
     }
+    if (!description) {
+        description = "Course purchase - Educational content";
+    }
     try {
-        const paymentIntent = yield stripe.paymentIntents.create({
+        const paymentIntentParams = {
             amount,
             currency: "usd",
+            description,
             automatic_payment_methods: {
                 enabled: true,
                 allow_redirects: "never",
             },
-        });
+        };
+        if (billingDetails === null || billingDetails === void 0 ? void 0 : billingDetails.shipping) {
+            paymentIntentParams.shipping = billingDetails.shipping;
+        }
+        const paymentIntent = yield stripe.paymentIntents.create(paymentIntentParams);
         res.json({
             message: "",
             data: {

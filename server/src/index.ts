@@ -6,26 +6,30 @@ import helmet from "helmet";
 import morgan from "morgan";
 import * as dynamoose from "dynamoose";
 
-import courseRoutes from "./routes/courseRoutes"
-import userClerkRoutes from "./routes/userClerkRoutes"
-import transactionRoutes from "./routes/transactionRoutes"
-import userCourseProgressRoutes from "./routes/userCourseProgressRoutes"
-import { clerkMiddleware, createClerkClient, requireAuth } from "@clerk/express";
+import courseRoutes from "./routes/courseRoutes";
+import userClerkRoutes from "./routes/userClerkRoutes";
+import transactionRoutes from "./routes/transactionRoutes";
+import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
+import {
+  clerkMiddleware,
+  createClerkClient,
+  requireAuth,
+} from "@clerk/express";
 dotenv.config();
 const isProduction = process.env.NODE_ENV === "production";
 
 export const clerkClient = createClerkClient({
-  secretKey:process.env.CLERK_SECRET_KEY,
-})
+  secretKey: process.env.CLERK_SECRET_KEY,
+});
 
-if(!isProduction){
-    dynamoose.aws.ddb.local();
+if (!isProduction) {
+  dynamoose.aws.ddb.local();
 }
 
 const app = express();
 app.use(express.json());
 app.use(helmet());
-app.use(helmet.crossOriginResourcePolicy({policy: "cross-origin"}));
+app.use(helmet.crossOriginResourcePolicy({ policy: "cross-origin" }));
 app.use(morgan("common"));
 app.use(cors());
 app.use(clerkMiddleware());
@@ -34,13 +38,13 @@ app.use(clerkMiddleware());
 // app.get("/", (req, res) => {
 //     res.send("Hello World");
 //   });
-app.use("/courses",courseRoutes);
-app.use("/users/clerk",requireAuth(),userClerkRoutes);
-app.use("/transactions",requireAuth(),transactionRoutes);
-app.use("/users/course-progress",requireAuth(),userCourseProgressRoutes);
+app.use("/courses", courseRoutes);
+app.use("/users/clerk", requireAuth(), userClerkRoutes);
+app.use("/transactions", requireAuth(), transactionRoutes);
+app.use("/users/course-progress", requireAuth(), userCourseProgressRoutes);
 const port = process.env.PORT || 3000;
-  if (!isProduction) {
-    app.listen(port, () => {
-      console.log(`Server running on port ${port}`);
-    });
+if (!isProduction) {
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
 }

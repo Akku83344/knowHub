@@ -39,21 +39,34 @@ export const createStripePaymentIntent = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  let { amount } = req.body;
+  let { amount, description, billingDetails } = req.body;
 
   if (!amount || amount <= 0) {
     amount = 50;
   }
 
+  if (!description) {
+    description = "Course purchase - Educational content";
+  }
+
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount,
       currency: "usd",
+      description,
       automatic_payment_methods: {
         enabled: true,
         allow_redirects: "never",
       },
-    });
+    };
+
+    if (billingDetails?.shipping) {
+      paymentIntentParams.shipping = billingDetails.shipping;
+    }
+
+    const paymentIntent = await stripe.paymentIntents.create(
+      paymentIntentParams
+    );
 
     res.json({
       message: "",

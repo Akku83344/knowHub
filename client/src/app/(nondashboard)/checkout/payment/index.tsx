@@ -4,12 +4,13 @@ import {
   PaymentElement,
   useElements,
   useStripe,
+  AddressElement,
 } from "@stripe/react-stripe-js";
 import { useCheckoutNavigation } from "@/hooks/useCheckoutNavigation";
 import { useCurrentCourse } from "@/hooks/useCurrentCourse";
 import { useClerk, useUser } from "@clerk/nextjs";
 import CoursePreview from "@/components/CoursePreview";
-import { CreditCard } from "lucide-react";
+import { CreditCard, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCreateTransactionMutation } from "@/state/api";
 import { toast } from "sonner";
@@ -34,28 +35,48 @@ const PaymentPageContent = () => {
     const baseUrl = process.env.NEXT_PUBLIC_LOCAL_URL
       ? `http://${process.env.NEXT_PUBLIC_LOCAL_URL}`
       : process.env.NEXT_PUBLIC_VERCEL_URL
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-      : undefined;
+        ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+        : "";
 
-    const result = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${baseUrl}/checkout?step=3&id=${courseId}`,
-      },
-      redirect: "if_required",
-    });
-    console.log(result);
-    if (result.paymentIntent?.status === "succeeded") {
-      const transactionData: Partial<Transaction> = {
-        transactionId: result.paymentIntent.id,
-        userId: user?.id,
-        courseId: courseId,
-        paymentProvider: "stripe",
-        amount: course?.price || 0,
-      };
+    try {
+      // Confirm the payment
+      const result = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${baseUrl}/checkout?step=3&id=${courseId}`,
+          payment_method_data: {
+            billing_details: {
+              name: user?.fullName || "",
+              email: user?.primaryEmailAddress?.emailAddress || "",
+            },
+          },
+        },
+        redirect: "if_required",
+      });
 
-      await createTransaction(transactionData)
-      navigateToStep(3);
+      if (result.error) {
+        console.error(result.error);
+        toast.error(result.error.message || "Payment failed");
+        return;
+      }
+
+      if (result.paymentIntent?.status === "succeeded") {
+        // Define the transaction data
+        const transactionData = {
+          transactionId: result.paymentIntent.id,
+          userId: user?.id,
+          courseId: courseId,
+          paymentProvider: "stripe",
+          amount: course?.price || 0,
+        };
+
+        await createTransaction(transactionData);
+        toast.success("Payment successful!");
+        navigateToStep(3);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("An unexpected error occurred during payment");
     }
   };
 
@@ -74,7 +95,7 @@ const PaymentPageContent = () => {
           <CoursePreview course={course} />
         </div>
 
-        {/* Pyament Form */}
+        {/* Payment Form */}
         <div className="payment__form-container">
           <form
             id="payment-form"
@@ -87,6 +108,33 @@ const PaymentPageContent = () => {
                 Fill out the payment details below to complete your purchase.
               </p>
 
+              {/* Billing Address - Required for Indian regulations */}
+              <div className="payment__method mb-4">
+                <h3 className="payment__method-title">Billing Address</h3>
+                <div className="payment__card-container">
+                  <div className="payment__card-header">
+                    <MapPin size={24} />
+                    <span>Address Information</span>
+                  </div>
+                  <div className="payment__card-element">
+                    <AddressElement
+                      options={{
+                        mode: "billing",
+                        fields: {
+                          phone: "always",
+                        },
+                        validation: {
+                          phone: {
+                            required: "always",
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Method */}
               <div className="payment__method">
                 <h3 className="payment__method-title">Payment Method</h3>
 

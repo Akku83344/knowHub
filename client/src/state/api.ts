@@ -44,7 +44,7 @@ const customBaseQuery = async (
       result.data = result.data.data;
     } else if (
       result.error?.status === 204 ||
-      result.meta?.response?.status === 24
+      result.meta?.response?.status === 204
     ) {
       return { data: null };
     }
@@ -95,22 +95,16 @@ export const api = createApi({
       providesTags: (result, error, id) => [{ type: "Courses", id }],
     }),
 
-    createCourse: build.mutation<
-      Course,
-      { teacherId: string; teacherName: string }
-    >({
+    createCourse: build.mutation<Course, { teacherId: string; teacherName: string }>({
       query: (body) => ({
-        url: `courses`,
+        url: "courses",
         method: "POST",
         body,
       }),
       invalidatesTags: ["Courses"],
     }),
 
-    updateCourse: build.mutation<
-      Course,
-      { courseId: string; formData: FormData }
-    >({
+    updateCourse: build.mutation<Course, { courseId: string; formData: FormData }>({
       query: ({ courseId, formData }) => ({
         url: `courses/${courseId}`,
         method: "PUT",
@@ -154,16 +148,18 @@ export const api = createApi({
     getTransactions: build.query<Transaction[], string>({
       query: (userId) => `transactions?userId=${userId}`,
     }),
+
     createStripePaymentIntent: build.mutation<
       { clientSecret: string },
-      { amount: number }
+      { amount: number; description?: string; billingDetails?: any }
     >({
-      query: ({ amount }) => ({
-        url: `/transactions/stripe/payment-intent`,
+      query: ({ amount, description, billingDetails }) => ({
+        url: "/transactions/stripe/payment-intent",
         method: "POST",
-        body: { amount },
+        body: { amount, description, billingDetails },
       }),
     }),
+
     createTransaction: build.mutation<Transaction, Partial<Transaction>>({
       query: (transaction) => ({
         url: "transactions",

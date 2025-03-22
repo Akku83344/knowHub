@@ -38,15 +38,20 @@ const StripeProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!course) return;
     const fetchPaymentIntent = async () => {
-      const result = await createStripePaymentIntent({
-        amount: course?.price ?? 9999999999999,
-      }).unwrap();
+      try {
+        const result = await createStripePaymentIntent({
+          amount: course?.price || 0,
+          description: `Purchase of course: ${course?.title || 'Online Course'}`,
+        }).unwrap();
 
-      setClientSecret(result.clientSecret);
+        setClientSecret(result.clientSecret);
+      } catch (error) {
+        console.error("Error creating payment intent:", error);
+      }
     };
 
     fetchPaymentIntent();
-  }, [createStripePaymentIntent, course?.price, course]);
+  }, [createStripePaymentIntent, course]);
 
   const options: StripeElementsOptions = {
     clientSecret,

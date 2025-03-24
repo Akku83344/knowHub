@@ -10,7 +10,6 @@ import { api } from "@/state/api";
 
 /* REDUX STORE */
 
-
 const rootReducer = combineReducers({
   global: globalReducer,
   [api.reducerPath]: api.reducer,

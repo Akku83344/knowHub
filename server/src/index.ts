@@ -5,11 +5,12 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import * as dynamoose from "dynamoose";
-
+import serverless from "serverless-http"
 import courseRoutes from "./routes/courseRoutes";
 import userClerkRoutes from "./routes/userClerkRoutes";
 import transactionRoutes from "./routes/transactionRoutes";
 import userCourseProgressRoutes from "./routes/userCourseProgressRoutes";
+import seed from "./seed/seedDynamodb";
 import {
   clerkMiddleware,
   createClerkClient,
@@ -48,3 +49,17 @@ if (!isProduction) {
     console.log(`Server running on port ${port}`);
   });
 }
+
+const serverlessApp = serverless(app);
+
+export const handler = async (event: any, context: any) => {
+  if (event.action === "seed") {
+    await seed();
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Data seeded successfully" }),
+    };
+  } else {
+    return serverlessApp(event, context);
+  }
+};

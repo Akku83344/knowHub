@@ -32,21 +32,32 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.clerkClient = void 0;
+exports.handler = exports.clerkClient = void 0;
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
 const morgan_1 = __importDefault(require("morgan"));
 const dynamoose = __importStar(require("dynamoose"));
+const serverless_http_1 = __importDefault(require("serverless-http"));
 const courseRoutes_1 = __importDefault(require("./routes/courseRoutes"));
 const userClerkRoutes_1 = __importDefault(require("./routes/userClerkRoutes"));
 const transactionRoutes_1 = __importDefault(require("./routes/transactionRoutes"));
 const userCourseProgressRoutes_1 = __importDefault(require("./routes/userCourseProgressRoutes"));
+const seedDynamodb_1 = __importDefault(require("./seed/seedDynamodb"));
 const express_2 = require("@clerk/express");
 dotenv_1.default.config();
 const isProduction = process.env.NODE_ENV === "production";
@@ -77,3 +88,17 @@ if (!isProduction) {
         console.log(`Server running on port ${port}`);
     });
 }
+const serverlessApp = (0, serverless_http_1.default)(app);
+const handler = (event, context) => __awaiter(void 0, void 0, void 0, function* () {
+    if (event.action === "seed") {
+        yield (0, seedDynamodb_1.default)();
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: "Data seeded successfully" }),
+        };
+    }
+    else {
+        return serverlessApp(event, context);
+    }
+});
+exports.handler = handler;
